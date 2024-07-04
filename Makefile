@@ -64,12 +64,36 @@ $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/mpfr*)): SITE = $(MPFR_S
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/isl*)): SITE = $(ISL_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/binutils*)): SITE = $(BINUTILS_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/gcc*)): SITE = $(GCC_SITE)/$(basename $(basename $(notdir $@)))
+
+ifeq ($(MUSL_VER),ohos)
+
+ifeq ($(OHOS_DIR),)
+$(error OHOS_DIR is not specified!)
+endif
+
+musl-ohos: $(OHOS_DIR)/third_party_musl
+	$</scripts/porting.sh -i $< -o $@ -p linux
+
+else
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/musl*)): SITE = $(MUSL_SITE)
+endif
+
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-5*)): SITE = $(LINUX_SITE)/v5.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-4*)): SITE = $(LINUX_SITE)/v4.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-3*)): SITE = $(LINUX_SITE)/v3.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-2.6*)): SITE = $(LINUX_SITE)/v2.6
+
+ifeq ($(LINUX_VER),ohos)
+
+ifeq ($(OHOS_DIR),)
+$(error OHOS_DIR is not specified!)
+endif
+
+linux-ohos: $(OHOS_DIR)/kernel_linux_5.10
+	cp -rav $< $@
+else
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-headers-*)): SITE = $(LINUX_HEADERS_SITE)
+endif
 
 $(SOURCES):
 	mkdir -p $@
@@ -137,6 +161,9 @@ musl-git-%:
 	mkdir $@.tmp
 	( cd $@.tmp && $(COWPATCH) -I ../$< )
 	test ! -d patches/$@ || cat patches/$@/* | ( cd $@.tmp && $(COWPATCH) -p1 )
+ifeq ($(MUSL_VER),ohos)
+	test ! -d patches/ohos/$@ || cat patches/ohos/$@/* | ( cd $@.tmp && $(COWPATCH) -p1 )
+endif
 	if test -f $</configfsf.sub ; then cs=configfsf.sub ; elif test -f $</config.sub ; then cs=config.sub ; else exit 0 ; fi ; rm -f $@.tmp/$$cs && cp -f $(SOURCES)/config.sub $@.tmp/$$cs && chmod +x $@.tmp/$$cs
 	rm -rf $@
 	mv $@.tmp $@

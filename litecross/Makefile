@@ -82,7 +82,7 @@ FULL_GCC_CONFIG = --enable-languages=c,c++ \
 	--enable-libstdcxx-time=rt
 
 FULL_MUSL_CONFIG = $(MUSL_CONFIG) \
-	--prefix= --host=$(TARGET)
+	--prefix= --host=$(TARGET) $(EXTRA_MUSL_CONFIG_ARGS)
 
 ifneq ($(NATIVE),)
 HOST:=$(TARGET)
